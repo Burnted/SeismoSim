@@ -17,7 +17,7 @@ object Renderer {
         g.drawOval(cx - r, cy - r, r * 2, r * 2)
     }
 
-    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Double, color: Color) {
+    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Double, color: Color, strokeWidth: Float = 2f) {
         for (ray in rays) {
             val ox = (ray.origin.x * scale + screenCenter.x).roundToInt()
             val oy = (-ray.origin.y * scale + screenCenter.y).roundToInt()
@@ -26,7 +26,7 @@ object Renderer {
             val ey = (-ray.end.y * scale + screenCenter.y).roundToInt()
 
             g.color = color
-            g.stroke = BasicStroke(2f)
+            g.stroke = BasicStroke(strokeWidth)
             g.drawLine(ox, oy, ex, ey)
         }
 

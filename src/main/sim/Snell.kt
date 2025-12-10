@@ -1,6 +1,5 @@
 package main.sim
 
-import main.geometry.Ray
 import main.geometry.Vec2
 import kotlin.math.sqrt
 
@@ -20,8 +19,6 @@ object Snell {
     }
 
     fun reflect(incident: Vec2, normal: Vec2): Vec2 {
-        val n = normal
-        val d = incident
-        return d - n * (2 * (d dot n))
+        return incident - normal * (2 * (incident dot normal))
     }
 }
