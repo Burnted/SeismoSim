@@ -4,9 +4,9 @@ import kotlin.math.sqrt
 
 object Intersections {
 
-    fun rayCircle(ray: Ray, circle: Circle): Vec2? {
+    fun rayCircleIntersection(ray: Ray, circle: Circle): Intersection? {
         val o = ray.origin
-        val d = ray.dir
+        val d = ray.direction
 
         val c = circle.center
         val r = circle.radius
@@ -31,6 +31,9 @@ object Intersections {
             else -> return null
         }
 
-        return o + d * t
+        val hit = o + d * t
+        val normal = circle.normalAt(hit)
+
+        return Intersection(hit, normal, t, circle)
     }
 }

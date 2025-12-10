@@ -13,21 +13,22 @@ object Renderer {
         val r = (circle.radius * scale).roundToInt()
 
         g.color = Color.BLUE
-        g.stroke = BasicStroke(3f)
+        g.stroke = BasicStroke(2f)
         g.drawOval(cx - r, cy - r, r * 2, r * 2)
     }
 
-    fun drawRay(g: Graphics2D, ray: Ray, length: Double, screenCenter: Vec2, scale: Double) {
-        val ox = (ray.origin.x * scale + screenCenter.x).roundToInt()
-        val oy = (-ray.origin.y * scale + screenCenter.y).roundToInt()
+    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Double, color: Color) {
+        for (ray in rays) {
+            val ox = (ray.origin.x * scale + screenCenter.x).roundToInt()
+            val oy = (-ray.origin.y * scale + screenCenter.y).roundToInt()
 
-        val end = ray.origin + ray.dir * length
+            val ex = (ray.end.x * scale + screenCenter.x).roundToInt()
+            val ey = (-ray.end.y * scale + screenCenter.y).roundToInt()
 
-        val ex = (end.x * scale + screenCenter.x).roundToInt()
-        val ey = (-end.y * scale + screenCenter.y).roundToInt()
+            g.color = color
+            g.stroke = BasicStroke(2f)
+            g.drawLine(ox, oy, ex, ey)
+        }
 
-        g.color = Color.RED
-        g.stroke = BasicStroke(3f)
-        g.drawLine(ox, oy, ex, ey)
     }
 }
