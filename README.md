@@ -18,7 +18,7 @@ The user can **drag the initial ray with the mouse**, and the simulation updates
 
 ---
 
-## ** Features**
+## **Features**
 
 - Physics-accurate **Snell’s Law** refraction
 - **Total Internal Reflection (TIR)** automatically handled
