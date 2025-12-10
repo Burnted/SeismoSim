@@ -23,8 +23,8 @@ The user can **drag the initial ray with the mouse**, and the simulation updates
 - Physics-accurate **Snell’s Law** refraction
 - **Total Internal Reflection (TIR)** automatically handled
 - Rays continue bouncing/refracting until a bounce limit is reached
-- Supports **multiple refractive media** (circles with customizable indices)
 - Real-time ray movement via **mouse control**
+- Implements vector geometry for angle calculations
 - Clean class structure:
     - `Vector2` – vector math utilities
     - `Ray` – origin + direction
