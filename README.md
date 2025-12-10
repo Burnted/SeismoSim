@@ -9,12 +9,12 @@ The user can **drag the initial ray with the mouse**, and the simulation updates
 ## **Preview**
 
 <!-- Image 1 -->
-*(Insert your first image here)*
+![alt text](https://github.com/Burnted/SeismoSim/blob/main/media/Screenshot%202025-12-10%20at%201.10.39%E2%80%AFAM.png)
 
 <br>
 
 <!-- Image 2 -->
-*(Insert your second image here)*
+![alt text](https://github.com/Burnted/SeismoSim/blob/main/media/Screenshot%202025-12-10%20at%201.10.59%E2%80%AFAM.png)
 
 ---
 
