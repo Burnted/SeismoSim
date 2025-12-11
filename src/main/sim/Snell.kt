@@ -4,18 +4,14 @@ import main.geometry.Vec2
 import kotlin.math.sqrt
 
 object Snell {
-    fun refract(incident: Vec2, normal: Vec2, v1: Double, v2: Double): Vec2? {
-        val cosI = -(normal.dot(incident))
+    fun vecRefract(incident: Vec2, normal: Vec2, v1: Double, v2: Double): Vec2? {
+        val nDotI = (normal * -1.0) dot incident
         val ratio = v1 / v2
 
-        val sinT2 = ratio * ratio * (1.0 - cosI * cosI)
+        val root = 1.0 - ratio * ratio * (1.0 - nDotI * nDotI)
+        if (root < 0) return null
 
-        if (sinT2 > 1.0)
-            return null // total internal reflection
-
-        val cosT = sqrt(1.0 - sinT2)
-
-        return incident * ratio + normal * (ratio * cosI - cosT)
+        return normal * sqrt(root) + (incident - normal * nDotI) * ratio
     }
 
     fun reflect(incident: Vec2, normal: Vec2): Vec2 {
