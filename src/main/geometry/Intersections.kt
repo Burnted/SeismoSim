@@ -2,37 +2,51 @@ package main.geometry
 
 import kotlin.math.sqrt
 
+import kotlin.math.hypot
+
 object Intersections {
 
+    // Assumes ray.direction is normalized -> a == 1.0 (saves a multiply)
     fun rayCircleIntersection(ray: Ray, circle: Circle): Intersection? {
-        val o = ray.origin
-        val d = ray.direction
+        val oX = ray.origin.x
+        val oY = ray.origin.y
+        val dX = ray.direction.x
+        val dY = ray.direction.y
 
-        val c = circle.center
+        val cX = circle.center.x
+        val cY = circle.center.y
         val r = circle.radius
 
-        val f = o - c
+        val fX = oX - cX
+        val fY = oY - cY
 
-        val a = d.dot(d)
-        val b = 2.0 * f.dot(d)
-        val cTerm = f.dot(f) - r * r
+        // a = d.dot(d) -> 1 if normalized
+        val b = 2.0 * (fX * dX + fY * dY)
+        val cTerm = fX * fX + fY * fY - r * r
 
-        val discriminant = b * b - 4 * a * cTerm
-        if (discriminant < 0) return null
+        val discriminant = b * b - 4.0 * cTerm
+        if (discriminant < 0.0) return null
 
         val sqrtD = sqrt(discriminant)
-
-        val t1 = (-b - sqrtD) / (2 * a)
-        val t2 = (-b + sqrtD) / (2 * a)
+        val t1 = (-b - sqrtD) * 0.5
+        val t2 = (-b + sqrtD) * 0.5
 
         val t = when {
-            t1 >= 0 -> t1
-            t2 >= 0 -> t2
+            t1 >= 0.0 -> t1
+            t2 >= 0.0 -> t2
             else -> return null
         }
 
-        val hit = o + d * t
-        val normal = circle.normalAt(hit)
+        // compute hit point scalarly and create Vec2 only once
+        val hitX = oX + dX * t
+        val hitY = oY + dY * t
+        val hit = Vec2(hitX, hitY)
+
+        // compute normal (single allocation)
+        val nx = hitX - cX
+        val ny = hitY - cY
+        val nLen = hypot(nx, ny)
+        val normal = if (nLen != 0.0) Vec2(nx / nLen, ny / nLen) else Vec2(0.0, 0.0)
 
         return Intersection(hit, normal, t, circle)
     }
