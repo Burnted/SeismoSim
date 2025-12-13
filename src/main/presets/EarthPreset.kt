@@ -1,4 +1,7 @@
-package main.geometry
+package main.presets
+
+import main.geometry.Circle
+import main.geometry.Vec2
 
 
 object EarthPreset {
@@ -34,7 +37,7 @@ object EarthPreset {
             }
             val v = vi + depth * dv
             val r = (TOTAL_RADIUS - depth).toFloat()
-            val circle = Circle(center = sharedCenter, radius = r, waveVelocity = v, layerDepth = depth)
+            val circle = Circle(center = sharedCenter, radius = r, waveVelocity = v)
             earth.add(circle)
         }
 
