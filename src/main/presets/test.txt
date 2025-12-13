@@ -1,3 +1,0 @@
-# Preset Configuration File
-layer_num=0,v=2,r=10
-layer_num=1,v=1,r=0

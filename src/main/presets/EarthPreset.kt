@@ -20,8 +20,6 @@ object EarthPreset {
     private const val OUT_VI: Double        = 7.5
     private const val IN_VI: Double         = 12.0
 
-    private const val SCALE:Float = 15f
-
     fun createEarth(): MutableList<Circle> {
         val earth = mutableListOf<Circle>()
         val sharedCenter = Vec2(0.0, 0.0)
@@ -43,58 +41,4 @@ object EarthPreset {
 
         return earth
     }
-//
-//    private fun initCrust(): MutableList<Circle> {
-//        val crust = mutableListOf<Circle>()
-//        for (depth in 0..30){
-//            crust.add(loopHelper(CRUST_DV, CRUST_VI, depth))
-//        }
-//        return crust
-//    }
-//
-//    private fun initLitho(): MutableList<Circle>{
-//        val litho = mutableListOf<Circle>()
-//        for (depth in 31..100){
-//            litho.add(loopHelper(LITHO_DV, LITHO_VI, depth))
-//        }
-//        return litho
-//    }
-//
-//    private fun initAstheno(): MutableList<Circle>{
-//        val astheno = mutableListOf<Circle>()
-//        for (depth in 101..250){
-//            astheno.add(loopHelper(ASTHENO_DV, ASTHENO_VI, depth))
-//        }
-//        return astheno
-//    }
-//
-//    private fun initMantle(): MutableList<Circle>{
-//        val mantle = mutableListOf<Circle>()
-//        for (depth in 251..2891){
-//            mantle.add(loopHelper(MANTLE_DV, MANTLE_VI, depth))
-//        }
-//        return mantle
-//    }
-//
-//    private fun initOut(): MutableList<Circle>{
-//        val outerCore = mutableListOf<Circle>()
-//        for (depth in 2891..5101){
-//            outerCore.add(loopHelper(OUT_DV, OUT_VI, depth))
-//        }
-//        return outerCore
-//    }
-//
-//    private fun initIn(): MutableList<Circle>{
-//        val innerCore = mutableListOf<Circle>()
-//        for (depth in 5101..6370){
-//            innerCore.add(loopHelper(0.0, IN_VI, depth))
-//        }
-//        return innerCore
-//    }
-//
-//    private fun loopHelper(dv: Double, vi: Double, depth: Int): Circle{
-//        val v = vi + depth.toDouble() * dv
-//        val r = (TOTAL_RADIUS - depth) / SCALE
-//        return Circle(radius = r, waveVelocity = v, layerDepth = depth)
-//    }
 }

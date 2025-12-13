@@ -1,7 +1,7 @@
 """A simple script for myself to more easily create presets"""
 
 file_name = input("Enter the name of the preset file (without extension): ")
-file_path = f"src/main/presets/{file_name}.txt"
+file_path = f"/Users/caedenmitchell/Documents/GitHub/SeismoSim/resources/{file_name}.txt"
 
 planet_radius = int(input("Enter planetary radius in km: ")) # scaling factor for complex presets
 mode = input("Enter mode (simple or complex): ").lower() # Simple: layer_num = medium_count, Complex: layer_num = planet_radius

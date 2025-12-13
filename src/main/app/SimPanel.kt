@@ -1,5 +1,6 @@
 import main.geometry.*
 import main.presets.EarthPreset
+import main.presets.PresetReader
 import main.render.Renderer
 import main.sim.RayTracer
 import java.awt.*
@@ -13,7 +14,7 @@ class SimPanel : JPanel() {
     companion object {
         const val WIDTH = 1200
         const val HEIGHT = 1000
-        const val DRAW_SCALE = 1.0f //0.0625
+        const val DRAW_SCALE = 0.0625f
         val center = Vec2(WIDTH / 2.0, HEIGHT / 2.0)
     }
 
@@ -24,7 +25,7 @@ class SimPanel : JPanel() {
     private val midMantle   = Circle(Vec2(0.0, 0.0), 250.0f, 15.0)
     private val outerCore   = Circle(Vec2(0.0, 0.0), 174.0f, 9.0)
     private val innerCore   = Circle(Vec2(0.0, 0.0), 63.5f, 11.8)
-    private val simple = mutableListOf(mantle, midMantle, outerCore, innerCore)
+    private val simple = PresetReader("t").readContentIntoCircles()
     private val earth = EarthPreset.createEarth()
     private val tracer:RayTracer = RayTracer(simple, ambientVelocity = 12.0, maxDepth = 100000)
 
@@ -38,8 +39,8 @@ class SimPanel : JPanel() {
         initCircleLayer()
         this.addMouseMotionListener(object : MouseAdapter() {
             override fun mouseMoved(e: MouseEvent) {
-                val x = (e.x.toDouble() - center.x)* 1
-                val y = -(e.y.toDouble() - center.y)* 1
+                val x = (e.x.toDouble() - center.x) / DRAW_SCALE
+                val y = -(e.y.toDouble() - center.y) / DRAW_SCALE
                 initialRayOrigin = Vec2(x, y)
                 initialRayDirection = Vec2(-sign(x), -sign(y))
                 repaint()
@@ -52,10 +53,9 @@ class SimPanel : JPanel() {
         val g2d = circleLayer.createGraphics()
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-        Renderer.drawCircle(g2d, outerCore, center, DRAW_SCALE)
-        Renderer.drawCircle(g2d, innerCore, center, DRAW_SCALE)
-        Renderer.drawCircle(g2d, mantle, center, DRAW_SCALE)
-        Renderer.drawCircle(g2d, midMantle, center, DRAW_SCALE)
+        for (circle in simple){
+            Renderer.drawCircle(g2d, circle, center, DRAW_SCALE)
+        }
 
         g2d.dispose()
     }
