@@ -10,7 +10,6 @@ class RayTracer(
     private var ambientVelocity: Double,
     private val maxDepth: Int = 5
 ) {
-    // sort concentric circles by radius descending (outermost -> innermost)
     private val circlesSorted: List<Circle> = circles.sortedByDescending { it.radius.toDouble() }
     private val radii: DoubleArray = circlesSorted.map { it.radius.toDouble() }.toDoubleArray()
 
@@ -18,12 +17,10 @@ class RayTracer(
         val rayPath = mutableListOf<Ray>()
         val reflectionPath = mutableListOf<Ray>()
 
-        // reuse a single currentRay object (copy incoming into mutable)
         val currentRay = Ray(Vec2(initial.origin.x, initial.origin.y), Vec2(initial.direction.x, initial.direction.y), Vec2(0.0, 0.0))
         currentRay.direction.normalizeInPlace()
         currentRay.setEndDistance(1_000_000.0)
 
-        // determine starting layer index (largest index i with d <= radii[i], else -1)
         fun layerForPoint(p: Vec2): Int {
             val d = hypot(p.x, p.y)
             for (i in radii.indices.reversed()) {
@@ -34,14 +31,12 @@ class RayTracer(
 
         var currentLayer = layerForPoint(currentRay.origin)
 
-        // IMPORTANT: initialize current medium velocity from the starting layer if inside one
         var currentMediumVelo = if (currentLayer >= 0) circlesSorted[currentLayer].waveVelocity else ambientVelocity
 
         for (iDepth in 0 until maxDepth) {
             val hit = findClosestIntersectionLimited(currentRay, currentLayer) ?: break
 
             val hitPoint = hit.point
-            // record visible segment up to hit
             rayPath.add(Ray(Vec2(currentRay.origin.x, currentRay.origin.y), Vec2(currentRay.direction.x, currentRay.direction.y), Vec2(hitPoint.x, hitPoint.y)))
 
             val circle = hit.circle
@@ -58,7 +53,6 @@ class RayTracer(
                 v2 = circle.waveVelocity
             } else {
                 v1 = currentMediumVelo
-                // when exiting, the next medium is the outer neighbor (index - 1) or ambient
                 v2 = if (circleIdx - 1 >= 0) circlesSorted[circleIdx - 1].waveVelocity else ambientVelocity
             }
 
@@ -66,26 +60,9 @@ class RayTracer(
 
             val newDir = if (refractedDir != null) {
                 currentMediumVelo = v2
-                val refl = reflect(currentRay.direction, normal * -1.0)
-                val reflNorm = refl.normalizedCopy()
-                // make a visible reflected ray starting at hitPoint going far along reflection direction
-                reflectionPath.add(Ray(
-                    Vec2(hitPoint.x, hitPoint.y),
-                    Vec2(reflNorm.x, reflNorm.y),
-                    Vec2(hitPoint.x + reflNorm.x * 1_000_000.0, hitPoint.y + reflNorm.y * 1_000_000.0)
-                ))
                 refractedDir
             } else {
-                // reflection happened -> record reflected ray segment
-                val refl = reflect(currentRay.direction, normal * -1.0)
-                val reflNorm = refl.normalizedCopy()
-                // make a visible reflected ray starting at hitPoint going far along reflection direction
-                reflectionPath.add(Ray(
-                    Vec2(hitPoint.x, hitPoint.y),
-                    Vec2(reflNorm.x, reflNorm.y),
-                    Vec2(hitPoint.x + reflNorm.x * 1_000_000.0, hitPoint.y + reflNorm.y * 1_000_000.0)
-                ))
-                refl
+                reflect(currentRay.direction, normal * -1.0)
             }
 
             // normalize once and reuse when nudging origin
@@ -106,10 +83,9 @@ class RayTracer(
     private fun findClosestIntersectionLimited(ray: Ray, currentLayer: Int): Intersection? {
         val candidates = ArrayList<Circle>(3)
         if (currentLayer >= 0) {
-            val idx = currentLayer
-            candidates.add(circlesSorted[idx])
-            if (idx - 1 >= 0) candidates.add(circlesSorted[idx - 1])
-            if (idx + 1 < circlesSorted.size) candidates.add(circlesSorted[idx + 1])
+            candidates.add(circlesSorted[currentLayer])
+            if (currentLayer - 1 >= 0) candidates.add(circlesSorted[currentLayer - 1])
+            if (currentLayer + 1 < circlesSorted.size) candidates.add(circlesSorted[currentLayer + 1])
         } else {
             val first = 0
             if (first < circlesSorted.size) {
