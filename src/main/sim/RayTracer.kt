@@ -13,9 +13,8 @@ class RayTracer(
     private val circlesSorted: List<Circle> = circles.sortedByDescending { it.radius.toDouble() }
     private val radii: DoubleArray = circlesSorted.map { it.radius.toDouble() }.toDoubleArray()
 
-    fun trace(initial: Ray): Pair<List<Ray>, List<Ray>> {
+    fun trace(initial: Ray): List<Ray> {
         val rayPath = mutableListOf<Ray>()
-        val reflectionPath = mutableListOf<Ray>()
 
         val currentRay = Ray(Vec2(initial.origin.x, initial.origin.y), Vec2(initial.direction.x, initial.direction.y), Vec2(0.0, 0.0))
         currentRay.direction.normalizeInPlace()
@@ -33,7 +32,7 @@ class RayTracer(
 
         var currentMediumVelo = if (currentLayer >= 0) circlesSorted[currentLayer].waveVelocity else ambientVelocity
 
-        for (iDepth in 0 until maxDepth) {
+        for (iDepth in 0..<maxDepth) {
             val hit = findClosestIntersectionLimited(currentRay, currentLayer) ?: break
 
             val hitPoint = hit.point
@@ -73,7 +72,7 @@ class RayTracer(
             currentLayer = layerForPoint(currentRay.origin)
         }
 
-        return Pair(rayPath, reflectionPath)
+        return rayPath
     }
 
     /**

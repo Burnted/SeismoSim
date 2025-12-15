@@ -7,12 +7,12 @@ import java.awt.*
 import kotlin.math.roundToInt
 
 object Renderer {
-    fun drawCircle(g: Graphics2D, circle: Circle, screenCenter: Vec2, scale: Float) {
+    fun drawCircle(g: Graphics2D, circle: Circle, screenCenter: Vec2, scale: Float, color: Color = Color.BLUE) {
         val cx = (circle.center.x * scale + screenCenter.x).roundToInt()
         val cy = (-circle.center.y * scale + screenCenter.y).roundToInt()
         val r = (circle.radius * scale).roundToInt()
 
-        g.color = Color.BLUE
+        g.color = color
         g.stroke = BasicStroke(2f)
         g.drawOval(cx - r, cy - r, r * 2, r * 2)
     }

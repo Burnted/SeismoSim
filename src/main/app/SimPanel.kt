@@ -14,20 +14,18 @@ class SimPanel : JPanel() {
     companion object {
         const val WIDTH = 1200
         const val HEIGHT = 1000
-        const val DRAW_SCALE = 0.0625f
+        const val STANDARD_RADIUS = 400f
         val center = Vec2(WIDTH / 2.0, HEIGHT / 2.0)
     }
+
 
     // TODO: add dialog boxes, sliders, or some kind of mouse clicked listener at startup to allow for placement of rays
     // TODO: add a toolbar with the option to reset rays, increase wave count, close application, and maybe even allow the change to velocity attributes
 
-    private val mantle      = Circle(Vec2(0.0, 0.0), 306.0f, 12.0)
-    private val midMantle   = Circle(Vec2(0.0, 0.0), 250.0f, 15.0)
-    private val outerCore   = Circle(Vec2(0.0, 0.0), 174.0f, 9.0)
-    private val innerCore   = Circle(Vec2(0.0, 0.0), 63.5f, 11.8)
-    private val simple = PresetReader("t").readContentIntoCircles()
-    private val earth = EarthPreset.createEarth()
-    private val tracer:RayTracer = RayTracer(simple, ambientVelocity = 12.0, maxDepth = 100000)
+    private val preset: Pair<MutableList<Circle>, Float> = PresetReader("earth.txt").readContentIntoCircles()
+    private val circles = preset.first
+    private val tracer:RayTracer = RayTracer(circles, ambientVelocity = 12.0, maxDepth = 100000)
+    private val drawScale = STANDARD_RADIUS / preset.second
 
     var initialRayOrigin = Vec2(0.0, 0.0)
     var initialRayDirection = Vec2(1.0, 1.0)
@@ -39,8 +37,8 @@ class SimPanel : JPanel() {
         initCircleLayer()
         this.addMouseMotionListener(object : MouseAdapter() {
             override fun mouseMoved(e: MouseEvent) {
-                val x = (e.x.toDouble() - center.x) / DRAW_SCALE
-                val y = -(e.y.toDouble() - center.y) / DRAW_SCALE
+                val x = (e.x.toDouble() - center.x) / drawScale
+                val y = -(e.y.toDouble() - center.y) / drawScale
                 initialRayOrigin = Vec2(x, y)
                 initialRayDirection = Vec2(-sign(x), -sign(y))
                 repaint()
@@ -52,11 +50,15 @@ class SimPanel : JPanel() {
         circleLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB)
         val g2d = circleLayer.createGraphics()
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-        for (circle in simple){
-            Renderer.drawCircle(g2d, circle, center, DRAW_SCALE)
+        
+        for (circle in circles){
+            val color = if (circle.mediumType % 2 == 0){
+                Color(200, 200, 255)
+            } else {
+                Color(150, 150, 255)
+            }
+            Renderer.drawCircle(g2d, circle, center, drawScale, color)
         }
-
         g2d.dispose()
     }
 
@@ -68,12 +70,9 @@ class SimPanel : JPanel() {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         g2d.drawImage(circleLayer, 0, 0, null)
-        val result = tracer.trace(Ray(initialRayOrigin, initialRayDirection))
-        val rays = result.first
-        val reflections = result.second
+        val rays = tracer.trace(Ray(initialRayOrigin, initialRayDirection))
 
-        Renderer.drawRays(g2d, reflections, screenCenter = center, scale = DRAW_SCALE, Color.CYAN, strokeWidth = 2f)
-        Renderer.drawRays(g2d, rays, screenCenter = center, scale = DRAW_SCALE, Color.RED, strokeWidth = 2f)
+        Renderer.drawRays(g2d, rays, screenCenter = center, scale = drawScale, Color.RED, strokeWidth = 0.7f)
     }
 }
 

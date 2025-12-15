@@ -47,20 +47,23 @@ create_mediums()
 
 with open(file_path, "w") as preset_file:
     preset_file.write("# Preset Configuration File\n")
+    preset_file.write(f"# layer type, velocity(km/s), radius(km)\n")
 
     if mode == "simple" or mode == "s":
         for medium in range(medium_count):
             v = layer_parameters_dict[medium]["v_i"]
             r = planet_radius if medium == 0 else planet_radius - layer_parameters_dict[medium-1]["layer_height"]
-            preset_file.write(f"layer_num={medium},v={v},r={r}\n")
+            preset_file.write(f"{medium},{v},{r}\n")
     elif mode == "complex" or mode == "c":
+        dr = 0
         for medium in range(medium_count):
             v_i = layer_parameters_dict[medium]["v_i"]
             v_f = layer_parameters_dict[medium]["v_f"]
-            r_i = planet_radius if medium == 0 else planet_radius - layer_parameters_dict[medium-1]["layer_height"]
+            r_i = planet_radius if medium == 0 else planet_radius - dr
+            dr += layer_parameters_dict[medium]["layer_height"]
             layer_height = layer_parameters_dict[medium]["layer_height"]
             dv = (v_f - v_i) / layer_height
             for layer in range(layer_height):
                 v = v_i + dv * layer
                 r = r_i - layer
-                preset_file.write(f"layer_num={planet_radius - r},v={v},r={r}\n")
+                preset_file.write(f"{medium},{v},{r}\n")
