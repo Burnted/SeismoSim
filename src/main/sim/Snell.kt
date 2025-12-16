@@ -1,4 +1,3 @@
-// kotlin
 package main.sim
 
 import main.geometry.Vec2
@@ -18,15 +17,14 @@ object Snell {
         val I = incident.normalizedCopy()
         val N = normal.normalizedCopy()
 
-        // clamp cosi to [-1,1] for numeric stability
         var cosi = - (N dot I)
         cosi = max(-1.0, min(1.0, cosi))
 
-        val eta = v2 / v1
+        val eta = (v2 / v1).toDouble()
         val k = 1.0 - eta * eta * (1.0 - cosi * cosi)
         if (k < 0.0) return null
 
-        val refr = I * eta.toDouble() + N * (eta * cosi - sqrt(k))
+        val refr = I * eta + N * (eta * cosi - sqrt(k))
         return refr.normalizedCopy()
     }
 

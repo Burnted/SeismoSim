@@ -4,24 +4,24 @@ import main.geometry.Circle
 import main.geometry.Vec2
 
 class PresetReader(private val fileName: String) {
-    private fun loadFileFromResources(): String?{
+    private fun loadFileFromResources(): String? {
         return PresetReader::class.java.getResource("/$fileName")?.readText()
     }
 
     fun readContentIntoCircles(): Pair<MutableList<Circle>, Float> {
         val fileContent = loadFileFromResources()
-        if (fileContent == null){
+        if (fileContent == null) {
             println("Could not find preset $fileName, loaded simple instead")
             return Presets.createSimple()
         }
 
         val lines = fileContent.lines()
         val circles = mutableListOf<Circle>()
-        if (lines[0] != "# Preset Configuration File") {
+        if (lines.isEmpty() || lines[0] != "# Preset Configuration File") {
             println("Incorrect file format, loaded simple instead")
             return Presets.createSimple()
         }
-        
+
         for (line in lines) {
             if (line.startsWith("#") || line.isBlank()) continue
             val parts = line.split(",")

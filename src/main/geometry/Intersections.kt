@@ -13,7 +13,7 @@ object Intersections {
 
         val cX = circle.center.x
         val cY = circle.center.y
-        val r = circle.radius
+        val r = circle.radius.toDouble()
 
         val fX = oX - cX
         val fY = oY - cY
@@ -30,8 +30,8 @@ object Intersections {
         val t2 = (-b + sqrtD) * 0.5
 
         val t = when {
-            t1 >= 0.0 -> t1
-            t2 >= 0.0 -> t2
+            t1 >= 1e-12 -> t1
+            t2 >= 1e-12 -> t2
             else -> return null
         }
 

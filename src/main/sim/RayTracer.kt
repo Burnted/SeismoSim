@@ -8,12 +8,15 @@ import kotlin.math.sqrt
 class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, private val maxDepth: Int = 5) {
     private val circlesSorted: List<Circle> = circles.sortedByDescending { it.radius.toDouble() }
     private val radii: DoubleArray = circlesSorted.map { it.radius.toDouble() }.toDoubleArray()
-
     private val circleIndexMap: Map<Circle, Int> = circlesSorted.withIndex().associate { it.value to it.index }
 
-    fun trace(initial: Ray): List<Ray> {
-        val rayPath = mutableListOf<Ray>()
+    /**
+     * Trace `initial` and append ray segments to `out`. Caller should provide a mutable list to reuse across frames.
+     * This function minimizes temporary allocations by reusing Vec2s for computations and the working Ray.
+     */
+    fun trace(initial: Ray, out: MutableList<Ray>) {
 
+        // working copy of the current ray (reused)
         val currentRay = Ray(Vec2(initial.origin.x, initial.origin.y), Vec2(initial.direction.x, initial.direction.y), Vec2(0.0, 0.0), initial.waveType)
         currentRay.direction.normalizeInPlace()
         currentRay.setEndDistance(1_000_000.0)
@@ -24,17 +27,19 @@ class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, priva
         }
 
         var currentLayer = layerForPoint(currentRay.origin)
-
         var currentMediumVelo = if (currentLayer >= 0) circlesSorted[currentLayer].waveVelocity else ambientVelocity
 
-        for (iDepth in 0..< maxDepth) {
+        // temporary vector for nudged origin
+        val tinyOriginTemp = Vec2(0.0, 0.0)
+
+        for (depth in 0..<maxDepth) {
             val hit = findClosestIntersectionLimited(currentRay, currentLayer) ?: break
 
-            val hitPoint = hit.point
-            rayPath.add(Ray(Vec2(currentRay.origin.x, currentRay.origin.y), Vec2(currentRay.direction.x, currentRay.direction.y), Vec2(hitPoint.x, hitPoint.y), currentRay.waveType))
+            // record the segment (create a copy for rendering)
+            out.add(currentRay.copyForRecord().also { it.end.x = hit.point.x; it.end.y = hit.point.y })
 
             val circle = hit.circle
-            val normal = circle.normalAt(hitPoint)
+            val normal = circle.normalAt(hit.point)
             val entering = currentRay.direction.dot(normal) < 0.0
 
             if (circle.mediumType >= 4 && currentRay.waveType == 1) {
@@ -42,11 +47,10 @@ class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, priva
                 break
             }
 
-            val v1: Float
-            val v2: Float
-
             val circleIdx = circleIndexMap[circle] ?: -1
 
+            val v1: Float
+            val v2: Float
             if (entering) {
                 v1 = currentMediumVelo
                 v2 = circle.waveVelocity
@@ -56,7 +60,6 @@ class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, priva
             }
 
             val refractedDir = vecRefract(currentRay.direction, if (entering) normal else normal * -1.0, v1, v2)
-
             val newDir = if (refractedDir != null) {
                 currentMediumVelo = v2
                 refractedDir
@@ -64,15 +67,14 @@ class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, priva
                 reflect(currentRay.direction, normal * -1.0)
             }
 
-            // normalize once and reuse when nudging origin
+            // normalize and nudge origin forward a tiny amount to avoid self-intersection
             val newDirNorm = newDir.normalizedCopy()
-            val tinyOrigin = Vec2(hitPoint.x + newDirNorm.x * 0.0001, hitPoint.y + newDirNorm.y * 0.0001)
-            currentRay.reset(tinyOrigin, newDir, 1_000_000.0)
+            tinyOriginTemp.x = hit.point.x + newDirNorm.x * 1e-4
+            tinyOriginTemp.y = hit.point.y + newDirNorm.y * 1e-4
 
+            currentRay.reset(tinyOriginTemp, newDir, 1_000_000.0)
             currentLayer = layerForPoint(currentRay.origin)
         }
-
-        return rayPath
     }
 
 

@@ -24,4 +24,9 @@ data class Ray(var origin: Vec2, var direction: Vec2, var end: Vec2 = Vec2(0.0, 
         direction.normalizeInPlace()
         setEndDistance(dist)
     }
+
+    // helper to copy this ray into a new Ray (used when recording segments)
+    fun copyForRecord(): Ray {
+        return Ray(Vec2(origin.x, origin.y), Vec2(direction.x, direction.y), Vec2(end.x, end.y), waveType)
+    }
 }

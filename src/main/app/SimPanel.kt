@@ -1,4 +1,3 @@
-// kotlin
 package main.app
 
 import main.geometry.*
@@ -21,7 +20,7 @@ class SimPanel : JPanel() {
 
     private val preset: Pair<MutableList<Circle>, Float> = PresetReader("earth.txt").readContentIntoCircles()
     private val circles = preset.first
-    private val tracer: RayTracer = RayTracer(circles, ambientVelocity = 12.0f, maxDepth = 100000)
+    private val tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = 100000)
     private val drawScale = STANDARD_RADIUS / preset.second
 
     var initialRayOrigin = Vec2(400.0, 400.0)
@@ -51,15 +50,16 @@ class SimPanel : JPanel() {
     )
 
     private lateinit var circleLayer: BufferedImage
-
-    // Use a translucent BufferedImage for rays so underlying circleLayer shows through
     private var raysLayer: BufferedImage? = null
+
+    // Reusable container for ray segments to avoid per-frame allocations
+    private val raysBuffer = mutableListOf<Ray>()
 
     init {
         this.preferredSize = Dimension(WIDTH, HEIGHT)
         initCircleLayer()
-        this.addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent) {
+        this.addMouseMotionListener(object : MouseAdapter() {
+            override fun mouseMoved(e: MouseEvent) {
                 val x = (e.x.toDouble() - center.x) / drawScale
                 val y = -(e.y.toDouble() - center.y) / drawScale
                 initialRayOrigin = Vec2(x, y)
@@ -71,17 +71,19 @@ class SimPanel : JPanel() {
     private fun initCircleLayer() {
         circleLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB)
         val g2d = circleLayer.createGraphics()
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-        for (circle in circles) {
-            val color = if (circle.mediumType % 2 == 0) {
-                Color(200, 200, 255)
-            } else {
-                Color(150, 150, 255)
+        try {
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            for (circle in circles) {
+                val color = if (circle.mediumType % 2 == 0) {
+                    Color(200, 200, 255)
+                } else {
+                    Color(150, 150, 255)
+                }
+                Renderer.drawCircle(g2d, circle, center, drawScale, color)
             }
-            Renderer.drawCircle(g2d, circle, center, drawScale, color)
+        } finally {
+            g2d.dispose()
         }
-        g2d.dispose()
     }
 
     override fun paintComponent(g: Graphics?) {
@@ -96,7 +98,6 @@ class SimPanel : JPanel() {
             raysLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB)
         }
 
-        // draw all rays into the offscreen translucent image
         val buf = raysLayer!!
         val rg = buf.createGraphics()
         try {
@@ -109,16 +110,17 @@ class SimPanel : JPanel() {
             rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             rg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED)
 
-            // draw each ray segment directly with integer coords
+            // Build rays for all directions into a single reusable list
+            raysBuffer.clear()
             for (dir in rayDirs) {
-                val waveType = if (dir.y < 0){
-                    1
-                } else {
-                    0
-                }
-                val rays = tracer.trace(Ray(initialRayOrigin, dir, waveType = waveType))
-                Renderer.drawRays(rg, rays, center, drawScale, Color.RED, 1.1f)
+                val waveType = if (dir.y < 0) 1 else 0
+                // create a lightweight initial Ray to pass to tracer (tracer will copy/reset internally)
+                val initial = Ray(Vec2(initialRayOrigin.x, initialRayOrigin.y), Vec2(dir.x, dir.y), Vec2(0.0, 0.0), waveType)
+                tracer.trace(initial, raysBuffer)
             }
+
+            // Draw all rays in one pass with minimized state changes
+            Renderer.drawRays(rg, raysBuffer, center, drawScale, Color.RED, 1.2f)
         } finally {
             rg.dispose()
         }

@@ -1,9 +1,5 @@
 package main.presets
 
-import main.geometry.Circle
-import main.geometry.Vec2
-
-
 object EarthPreset {
      const val TOTAL_RADIUS: Int = 6370
 
