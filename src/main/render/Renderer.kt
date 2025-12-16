@@ -19,13 +19,13 @@ object Renderer {
 
     fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Float, color: Color, strokeWidth: Float = 2f) {
         for (ray in rays) {
-            val ox = (ray.origin.x * scale + screenCenter.x).roundToInt()
-            val oy = (-ray.origin.y * scale + screenCenter.y).roundToInt()
+            val ox = (ray.origin.x * scale + screenCenter.x).toInt()
+            val oy = (-ray.origin.y * scale + screenCenter.y).toInt()
 
-            val ex = (ray.end.x * scale + screenCenter.x).roundToInt()
-            val ey = (-ray.end.y * scale + screenCenter.y).roundToInt()
+            val ex = (ray.end.x * scale + screenCenter.x).toInt()
+            val ey = (-ray.end.y * scale + screenCenter.y).toInt()
 
-            g.color = color
+            g.color = if(ray.waveType == 0) Color.MAGENTA else color
             g.stroke = BasicStroke(strokeWidth)
             g.drawLine(ox, oy, ex, ey)
         }

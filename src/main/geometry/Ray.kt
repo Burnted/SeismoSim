@@ -1,7 +1,7 @@
 // kotlin
 package main.geometry
 
-data class Ray(var origin: Vec2, var direction: Vec2, var end: Vec2 = Vec2(0.0, 0.0)) {
+data class Ray(var origin: Vec2, var direction: Vec2, var end: Vec2 = Vec2(0.0, 0.0), val waveType: Int) {
     init {
         direction.normalizeInPlace()
         if (end.x == 0.0 && end.y == 0.0) {

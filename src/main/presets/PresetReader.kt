@@ -27,7 +27,7 @@ class PresetReader(private val fileName: String) {
             val parts = line.split(",")
             if (parts.size >= 3) {
                 val layerNum = parts[0].trim().toIntOrNull()
-                val waveVelocity = parts[1].trim().toDoubleOrNull()
+                val waveVelocity = parts[1].trim().toFloatOrNull()
                 val radius = parts[2].trim().toFloatOrNull()
 
                 if (radius != null && waveVelocity != null && layerNum != null) {

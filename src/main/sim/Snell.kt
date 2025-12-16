@@ -14,7 +14,7 @@ object Snell {
      *
      * Returns null on total internal reflection.
      */
-    fun vecRefract(incident: Vec2, normal: Vec2, v1: Double, v2: Double): Vec2? {
+    fun vecRefract(incident: Vec2, normal: Vec2, v1: Float, v2: Float): Vec2? {
         val I = incident.normalizedCopy()
         val N = normal.normalizedCopy()
 
@@ -26,7 +26,7 @@ object Snell {
         val k = 1.0 - eta * eta * (1.0 - cosi * cosi)
         if (k < 0.0) return null
 
-        val refr = I * eta + N * (eta * cosi - sqrt(k))
+        val refr = I * eta.toDouble() + N * (eta * cosi - sqrt(k))
         return refr.normalizedCopy()
     }
 

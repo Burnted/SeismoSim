@@ -1,3 +1,5 @@
+package main.app
+
 import javax.swing.JFrame
 
 class Window: JFrame() {

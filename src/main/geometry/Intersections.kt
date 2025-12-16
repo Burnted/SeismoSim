@@ -2,8 +2,6 @@ package main.geometry
 
 import kotlin.math.sqrt
 
-import kotlin.math.hypot
-
 object Intersections {
 
     // Assumes ray.direction is normalized -> a == 1.0 (saves a multiply)
@@ -45,7 +43,7 @@ object Intersections {
         // compute normal (single allocation)
         val nx = hitX - cX
         val ny = hitY - cY
-        val nLen = hypot(nx, ny)
+        val nLen = sqrt(nx * nx + ny * ny)
         val normal = if (nLen != 0.0) Vec2(nx / nLen, ny / nLen) else Vec2(0.0, 0.0)
 
         return Intersection(hit, normal, t, circle)
