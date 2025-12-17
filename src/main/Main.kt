@@ -1,9 +1,8 @@
 package main
 
-import main.app.Window
+import main.ui.Window
 import javax.swing.*
 
 fun main() {
     SwingUtilities.invokeLater { Window() }
-
 }

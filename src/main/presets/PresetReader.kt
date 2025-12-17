@@ -3,7 +3,7 @@ package main.presets
 import main.geometry.Circle
 import main.geometry.Vec2
 
-class PresetReader(private val fileName: String) {
+class PresetReader(var fileName: String) {
     private fun loadFileFromResources(): String? {
         return PresetReader::class.java.getResource("/$fileName")?.readText()
     }
@@ -12,7 +12,7 @@ class PresetReader(private val fileName: String) {
         val fileContent = loadFileFromResources()
         if (fileContent == null) {
             println("Could not find preset $fileName, loaded simple instead")
-            return Presets.createEarth()
+            return Presets.createSimple()
         }
 
         val lines = fileContent.lines()
@@ -31,7 +31,6 @@ class PresetReader(private val fileName: String) {
                 val radius = parts[2].trim().toFloatOrNull()
 
                 if (radius != null && waveVelocity != null && layerNum != null) {
-                    println("radius: $radius, velocity: $waveVelocity, layer: $layerNum")
                     val circle = Circle(Vec2(0.0, 0.0), radius, waveVelocity, layerNum)
                     circles.add(circle)
                 } else {

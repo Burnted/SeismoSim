@@ -1,6 +1,8 @@
-package main.app
+package main.ui
 
-import main.geometry.*
+import main.geometry.Circle
+import main.geometry.Ray
+import main.geometry.Vec2
 import main.presets.PresetReader
 import main.render.Renderer
 import main.sim.RayTracer
@@ -18,14 +20,16 @@ class SimPanel : JPanel() {
         val center = Vec2(WIDTH / 2.0, HEIGHT / 2.0)
     }
 
-    private val preset: Pair<MutableList<Circle>, Float> = PresetReader("mars.txt").readContentIntoCircles()
-    private val circles = preset.first
-    private val tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = 100000)
-    private val drawScale = STANDARD_RADIUS / preset.second
+    private val presetReader = PresetReader("earth.txt")
+
+    private var preset: Pair<MutableList<Circle>, Float> = presetReader.readContentIntoCircles()
+    private var circles = preset.first
+    private var tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = 100000)
+    private var drawScale = STANDARD_RADIUS / preset.second
 
     var initialRayOrigin = Vec2(400.0, 400.0)
 
-    var rayDirs = mutableListOf(
+    private var rayDirs = mutableListOf(
         Vec2(-1.0, 0.5),
         Vec2(-1.0, 0.45),
         Vec2(-1.0, 0.4),
@@ -127,5 +131,27 @@ class SimPanel : JPanel() {
 
         // blit the translucent raysLayer to the panel; circleLayer remains visible underneath
         g2d.drawImage(buf, 0, 0, null)
+    }
+
+    fun loadPreset(selectedPreset: String) {
+        presetReader.fileName = if (selectedPreset == "custom") "simple.txt" else "$selectedPreset.txt"
+        preset = presetReader.readContentIntoCircles()
+        circles = preset.first
+        tracer = RayTracer(circles, ambientVelocity = circles.first().waveVelocity, maxDepth = 100000)
+        drawScale = STANDARD_RADIUS / preset.second
+        initCircleLayer()
+        repaint()
+    }
+
+    fun updateRayCount(rayCount: Int) {
+        // Adjust the number of ray directions based on the slider value
+        rayDirs.clear()
+        val step = 1.0 / rayCount
+        for (i in 0..<rayCount) {
+            val y = -0.5 + i * step
+            rayDirs.add(Vec2(-1.0, y))
+        }
+        repaint()
+
     }
 }
