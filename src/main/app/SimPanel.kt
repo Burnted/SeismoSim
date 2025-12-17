@@ -18,7 +18,7 @@ class SimPanel : JPanel() {
         val center = Vec2(WIDTH / 2.0, HEIGHT / 2.0)
     }
 
-    private val preset: Pair<MutableList<Circle>, Float> = PresetReader("earth.txt").readContentIntoCircles()
+    private val preset: Pair<MutableList<Circle>, Float> = PresetReader("mars.txt").readContentIntoCircles()
     private val circles = preset.first
     private val tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = 100000)
     private val drawScale = STANDARD_RADIUS / preset.second

@@ -20,6 +20,7 @@ object Presets {
 
             val v = vi + depth * dv
             val r = (EarthPreset.TOTAL_RADIUS - depth).toFloat()
+            println("radius: $r, velocity: $v, medium: $mediumNum")
             val circle = Circle(center = sharedCenter, radius = r, waveVelocity = v, mediumType = mediumNum)
             earth.add(circle)
         }

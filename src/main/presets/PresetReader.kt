@@ -12,7 +12,7 @@ class PresetReader(private val fileName: String) {
         val fileContent = loadFileFromResources()
         if (fileContent == null) {
             println("Could not find preset $fileName, loaded simple instead")
-            return Presets.createSimple()
+            return Presets.createEarth()
         }
 
         val lines = fileContent.lines()
@@ -31,6 +31,7 @@ class PresetReader(private val fileName: String) {
                 val radius = parts[2].trim().toFloatOrNull()
 
                 if (radius != null && waveVelocity != null && layerNum != null) {
+                    println("radius: $radius, velocity: $waveVelocity, layer: $layerNum")
                     val circle = Circle(Vec2(0.0, 0.0), radius, waveVelocity, layerNum)
                     circles.add(circle)
                 } else {

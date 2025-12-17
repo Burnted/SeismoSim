@@ -1,7 +1,8 @@
 """A simple script for myself to more easily create presets"""
+import pandas as pd
 
-file_name = input("Enter the name of the preset file (without extension): ")
-file_path = f"/Users/caedenmitchell/Documents/GitHub/SeismoSim/resources/{file_name}.txt"
+output_file_name = input("Enter the name of the preset file (without extension): ")
+output_file_path = f"/Users/caedenmitchell/Documents/GitHub/SeismoSim/resources/{output_file_name}.txt"
 
 planet_radius = int(input("Enter planetary radius in km: ")) # scaling factor for complex presets
 mode = input("Enter mode (simple or complex): ").lower() # Simple: layer_num = medium_count, Complex: layer_num = planet_radius
@@ -45,7 +46,7 @@ def create_mediums():
 
 create_mediums()
 
-with open(file_path, "w") as preset_file:
+with open(output_file_path, "w") as preset_file:
     preset_file.write("# Preset Configuration File\n")
     preset_file.write(f"# layer type, velocity(km/s), radius(km)\n")
 
