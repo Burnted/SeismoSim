@@ -13,7 +13,7 @@ object Renderer {
     private val cachedStroke = mutableMapOf<Float, BasicStroke>()
     private val rayPath = Path2D.Double()
 
-    inline fun getStroke(width: Float): BasicStroke {
+    private fun getStroke(width: Float): BasicStroke {
         return cachedStroke.getOrPut(width) { BasicStroke(width) }
     }
 
@@ -27,7 +27,7 @@ object Renderer {
         g.drawOval(cx - r, cy - r, r * 2, r * 2)
     }
 
-    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Float, color: Color, strokeWidth: Float = 1.2f) {
+    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Float, color: Color, strokeWidth: Float = 1.0f) {
         if (rays.isEmpty()) return
 
         rayPath.reset()

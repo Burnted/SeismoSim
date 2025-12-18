@@ -86,14 +86,16 @@ class SimPanel : JPanel() {
         g2d.drawImage(circleLayer, 0, 0, null)
 
         if (raysLayer == null || raysLayer!!.width != WIDTH || raysLayer!!.height != HEIGHT) {
-            raysLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB)
+            raysLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB)
         }
 
         val buf = raysLayer!!
         val rg = buf.createGraphics()
         try {
-            rg.color = Color.BLACK
+            // Clear with transparent background (not black)
+            rg.composite = AlphaComposite.Clear
             rg.fillRect(0, 0, WIDTH, HEIGHT)
+            rg.composite = AlphaComposite.SrcOver
             rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF)
             rg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED)
 
