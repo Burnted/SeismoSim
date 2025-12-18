@@ -31,7 +31,7 @@ class PresetReader(var fileName: String) {
                 val radius = parts[2].trim().toFloatOrNull()
 
                 if (radius != null && waveVelocity != null && layerNum != null) {
-                    val circle = Circle(Vec2(0.0, 0.0), radius, waveVelocity, layerNum)
+                    val circle = Circle(Vec2(0.0, 0.0), radius = radius, pWaveVelocity = waveVelocity, mediumType = layerNum)
                     circles.add(circle)
                 } else {
                     println("Invalid data in line: $line")

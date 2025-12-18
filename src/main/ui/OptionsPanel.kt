@@ -15,6 +15,17 @@ class OptionsPanel : JPanel() {
         selectedItem = 0
     }
 
+    private val waveTypeLabel = JLabel("Wave Type:").apply {
+        font = font.deriveFont(16f)
+        alignmentX = LEFT_ALIGNMENT
+    }
+
+    val waveTypeSelector = JCheckBox("S-Waves Enabled").apply {
+        maximumSize = Dimension(150, 30)
+        alignmentX = LEFT_ALIGNMENT
+        isSelected = false
+    }
+
     private val rayCountLabel = JLabel("Ray Count:").apply {
         font = font.deriveFont(16f)
         alignmentX = LEFT_ALIGNMENT
@@ -32,31 +43,47 @@ class OptionsPanel : JPanel() {
 
     val layerLabels = listOf(JLabel("Layer 0:"), JLabel("Layer 1:"), JLabel("Layer 2:"), JLabel("Layer 3:"))
 
+    private val velSliders = arrayOf(
+        JSlider(JSlider.HORIZONTAL, 0, 150, 120),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 120),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 60),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 60),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 150),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 150),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 75),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 75),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 90),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 90),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 0),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 0),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 120),
+        JSlider(JSlider.HORIZONTAL, 0, 150, 120),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 0),
+        JSlider(JSlider.HORIZONTAL, 0, 100, 0)
+    )
 
-    val velSlidersToLabels = mapOf(
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 120) to JLabel("P-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 120) to JLabel("P-Wave v_f:"),
+    private val velLabels = arrayOf(
+        JLabel("P-Wave v_i:"),
+        JLabel("P-Wave v_f:"),
+        JLabel("S-Wave v_i:"),
+        JLabel("S-Wave v_f:"),
+        JLabel("P-Wave v_i:"),
+        JLabel("P-Wave v_f:"),
+        JLabel("S-Wave v_i:"),
+        JLabel("S-Wave v_f:"),
+        JLabel("P-Wave v_i:"),
+        JLabel("P-Wave v_f:"),
+        JLabel("S-Wave v_i:"),
+        JLabel("S-Wave v_f:"),
+        JLabel("P-Wave v_i:"),
+        JLabel("P-Wave v_f:"),
+        JLabel("S-Wave v_i:"),
+        JLabel("S-Wave v_f:")
+    )
 
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_f:"),
-
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 150) to JLabel("P-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 150) to JLabel("P-Wave v_f:"),
-
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_f:"),
-
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 90) to JLabel("P-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 90) to JLabel("P-Wave v_f:"),
-
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_f:"),
-
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 120) to JLabel("P-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 150, 120) to JLabel("P-Wave v_f:"),
-
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50) to JLabel("S-Wave v_i:"),
-                                    JSlider(JSlider.HORIZONTAL, 0, 100, 50)to JLabel("S-Wave v_f:"))
+    // Expose sliders via property for easier iteration
+    val velSlidersToLabels: Map<JSlider, JLabel>
+        get() = velSliders.zip(velLabels).toMap()
 
     init {
         preferredSize = Dimension(300, 1000)
@@ -75,11 +102,19 @@ class OptionsPanel : JPanel() {
 
         c.gridx = 0
         c.gridy = 1
+        add(waveTypeLabel, c)
+
+        c.gridx = 1
+        c.gridy = 1
+        add(waveTypeSelector, c)
+
+        c.gridx = 0
+        c.gridy = 2
         c.gridwidth = 2
         add(rayCountLabel, c)
 
         c.gridx = 0
-        c.gridy = 2
+        c.gridy = 3
         c.ipadx = 250
         c.gridwidth = 2
         add(rayCountSlider, c)
@@ -91,11 +126,11 @@ class OptionsPanel : JPanel() {
     }
 
     private fun initVelLabels(c: GridBagConstraints) {
-        var row = 3
+        var row = 4
         var layer = 0
-        for ((slider, label) in velSlidersToLabels) {
+        for (i in velSliders.indices) {
             c.ipadx = 0
-            if (row in listOf(3, 8, 13, 18)){
+            if (row in listOf(4, 9, 14, 19)) {
                 layerLabels[layer].font = layerLabels[layer].font.deriveFont(16f)
                 c.gridx = 0
                 c.gridy = row
@@ -109,32 +144,35 @@ class OptionsPanel : JPanel() {
             c.gridx = 0
             c.gridy = row
             c.gridwidth = 1
-            add(label, c)
-
+            add(velLabels[i], c)
 
             c.gridx = 1
             c.gridy = row
             c.gridwidth = 1
             c.ipadx = 120
-            add(slider, c)
+            add(velSliders[i], c)
             row++
-            updateVelLabel(slider)
+            updateVelLabel(velSliders[i])
         }
     }
 
-    fun updateVisibility(){
-        for (label in layerLabels){
-            label.isVisible = presetSelector.selectedItem == "custom"
+    fun updateVisibility() {
+        val isCustom = presetSelector.selectedItem == "custom"
+        for (label in layerLabels) {
+            label.isVisible = isCustom
         }
-
-        for ((slider, label) in velSlidersToLabels){
-            slider.isVisible = presetSelector.selectedItem == "custom"
-            label.isVisible = presetSelector.selectedItem == "custom"
+        for (slider in velSliders) {
+            slider.isVisible = isCustom
+        }
+        for (label in velLabels) {
+            label.isVisible = isCustom
         }
     }
 
-    fun updateVelLabel(slider: JSlider){
-        val label = velSlidersToLabels[slider] ?: return
+    fun updateVelLabel(slider: JSlider) {
+        val idx = velSliders.indexOf(slider)
+        if (idx < 0) return
+        val label = velLabels[idx]
         val value: Float = slider.value / 10f
         val text = label.text.split(":")[0]
         label.text = "$text: $value km/s"

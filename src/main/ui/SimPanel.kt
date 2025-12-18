@@ -22,52 +22,38 @@ class SimPanel : JPanel() {
     }
 
     private val presetReader = PresetReader("earth.txt")
-
     private var preset: Pair<MutableList<Circle>, Float> = presetReader.readContentIntoCircles()
     private var circles = preset.first
-    private var tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = preset.second.toInt() * 2)
+    private var tracer: RayTracer = RayTracer(circles, maxDepth = preset.second.toInt() * 2)
     private var drawScale = STANDARD_RADIUS / preset.second
 
-    var initialRayOrigin = Vec2(400.0, 400.0)
+    private var waveType = 0
 
-    private var rayDirs = mutableListOf(
-        Vec2(-1.0, 0.5),
-        Vec2(-1.0, 0.45),
-        Vec2(-1.0, 0.4),
-        Vec2(-1.0, 0.35),
-        Vec2(-1.0, 0.3),
-        Vec2(-1.0, 0.25),
-        Vec2(-1.0, 0.2),
-        Vec2(-1.0, 0.15),
-        Vec2(-1.0, 0.1),
-        Vec2(-1.0, 0.05),
-        Vec2(-1.0, 0.0),
-        Vec2(-1.0, -0.5),
-        Vec2(-1.0, -0.45),
-        Vec2(-1.0, -0.4),
-        Vec2(-1.0, -0.35),
-        Vec2(-1.0, -0.3),
-        Vec2(-1.0, -0.25),
-        Vec2(-1.0, -0.2),
-        Vec2(-1.0, -0.15),
-        Vec2(-1.0, -0.1),
-        Vec2(-1.0, -0.05),
-    )
+    var initialRayOrigin = Vec2(400.0, 400.0)
+    private var rayDirs = mutableListOf<Vec2>()
 
     private lateinit var circleLayer: BufferedImage
     private var raysLayer: BufferedImage? = null
-
-    // Reusable container for ray segments to avoid per-frame allocations
     private val raysBuffer = mutableListOf<Ray>()
+
+    // Cache for ray rendering to avoid per-frame recomputation
+    private var cachedRayOrigin = Vec2(-1e6, -1e6)
+    private var cachedWaveType = -1
+    private var cachedRayDirsHash = 0
+    private var needsRayUpdate = true
 
     init {
         this.preferredSize = Dimension(WIDTH, HEIGHT)
         initCircleLayer()
+        updateRayCount(21)
+
         this.addMouseMotionListener(object : MouseAdapter() {
             override fun mouseMoved(e: MouseEvent) {
                 val x = (e.x.toDouble() - center.x) / drawScale
                 val y = -(e.y.toDouble() - center.y) / drawScale
-                initialRayOrigin = Vec2(x, y)
+                initialRayOrigin.x = x
+                initialRayOrigin.y = y
+                needsRayUpdate = true
                 repaint()
             }
         })
@@ -95,10 +81,8 @@ class SimPanel : JPanel() {
         super.paintComponent(g)
         val g2d = g as Graphics2D
 
-        // draw static circle layer first
         g2d.drawImage(circleLayer, 0, 0, null)
 
-        // ensure raysLayer exists and matches size (translucent ARGB)
         if (raysLayer == null || raysLayer!!.width != WIDTH || raysLayer!!.height != HEIGHT) {
             raysLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB)
         }
@@ -106,31 +90,37 @@ class SimPanel : JPanel() {
         val buf = raysLayer!!
         val rg = buf.createGraphics()
         try {
-            // clear fast (transparent)
             rg.composite = AlphaComposite.Clear
             rg.fillRect(0, 0, WIDTH, HEIGHT)
             rg.composite = AlphaComposite.SrcOver
-
-            // one-time graphics setup for speed
             rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             rg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED)
 
-            // Build rays for all directions into a single reusable list
-            raysBuffer.clear()
-            for (dir in rayDirs) {
-                val waveType = if (dir.y < 0) 1 else 0
-                // create a lightweight initial Ray to pass to tracer (tracer will copy/reset internally)
-                val initial = Ray(Vec2(initialRayOrigin.x, initialRayOrigin.y), Vec2(dir.x, dir.y), Vec2(0.0, 0.0), waveType)
-                tracer.trace(initial, raysBuffer)
+            // Only recompute rays if origin, direction count, or wave type changed
+            if (needsRayUpdate ||
+                cachedRayOrigin.x != initialRayOrigin.x ||
+                cachedRayOrigin.y != initialRayOrigin.y ||
+                cachedWaveType != waveType ||
+                cachedRayDirsHash != rayDirs.hashCode()) {
+
+                raysBuffer.clear()
+                for (dir in rayDirs) {
+                    val initial = Ray(initialRayOrigin.x, initialRayOrigin.y, dir.x, dir.y, waveType)
+                    tracer.trace(initial, raysBuffer)
+                }
+
+                cachedRayOrigin.x = initialRayOrigin.x
+                cachedRayOrigin.y = initialRayOrigin.y
+                cachedWaveType = waveType
+                cachedRayDirsHash = rayDirs.hashCode()
+                needsRayUpdate = false
             }
 
-            // Draw all rays in one pass with minimized state changes
             Renderer.drawRays(rg, raysBuffer, center, drawScale, Color.RED, 1.2f)
         } finally {
             rg.dispose()
         }
 
-        // blit the translucent raysLayer to the panel; circleLayer remains visible underneath
         g2d.drawImage(buf, 0, 0, null)
     }
 
@@ -138,36 +128,34 @@ class SimPanel : JPanel() {
         presetReader.fileName = if (selectedPreset == "custom") "simple.txt" else "$selectedPreset.txt"
         preset = presetReader.readContentIntoCircles()
         circles = preset.first
-        tracer = RayTracer(circles, ambientVelocity = circles.first().pWaveVelocity, maxDepth = preset.second.toInt() * 2)
+        tracer = RayTracer(circles, maxDepth = preset.second.toInt() * 2)
         drawScale = STANDARD_RADIUS / preset.second
         initCircleLayer()
+        needsRayUpdate = true
         repaint()
     }
 
     fun updateRayCount(rayCount: Int) {
-        // Adjust the number of ray directions based on the slider value
         rayDirs.clear()
         val step = 1.0 / rayCount
         for (i in 0..<rayCount) {
             val y = -0.5 + i * step
             rayDirs.add(Vec2(-1.0, y))
         }
+        needsRayUpdate = true
         repaint()
     }
 
-    fun updateVelocities(initialVelocities: List<Float>, finalVelocities: List<Float>) {
-        circles = Presets.createSimple(
-            vI0 = initialVelocities[0],
-            vF0 = finalVelocities[0],
-            vI1 = initialVelocities[1],
-            vF1 = finalVelocities[1],
-            vI2 = initialVelocities[2],
-            vF2 = finalVelocities[2],
-            vI3 = initialVelocities[3],
-            vF3 = finalVelocities[3]
-        ).first
+    fun updateVelocities(pIV: List<Float>, pFV: List<Float>, sIV: List<Float>, sFV: List<Float>) {
+        circles = Presets.createSimple(pIV, pFV, sIV, sFV).first
+        tracer = RayTracer(circles, maxDepth = preset.second.toInt() * 2)
+        needsRayUpdate = true
+        repaint()
+    }
 
-        tracer = RayTracer(circles, ambientVelocity = circles.first().pWaveVelocity, maxDepth = preset.second.toInt() * 2)
+    fun updateWaveType(sWaveEnabled: Boolean) {
+        waveType = if (sWaveEnabled) 1 else 0
+        needsRayUpdate = true
         repaint()
     }
 }

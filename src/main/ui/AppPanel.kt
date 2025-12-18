@@ -19,8 +19,9 @@ class AppPanel : JPanel(), ChangeListener, ActionListener {
 
         simPanel.minimumSize = Dimension(SimPanel.WIDTH - 300, SimPanel.HEIGHT)
         optionsPanel.minimumSize = Dimension(300, SimPanel.HEIGHT)
-        optionsPanel.rayCountSlider.addChangeListener(this)
         optionsPanel.presetSelector.addActionListener(this)
+        optionsPanel.waveTypeSelector.addActionListener(this)
+        optionsPanel.rayCountSlider.addChangeListener(this)
         for (slider in optionsPanel.velSlidersToLabels.keys) {
             slider.addChangeListener(this)
         }
@@ -32,6 +33,11 @@ class AppPanel : JPanel(), ChangeListener, ActionListener {
             // Handle the preset change in simPanel
             simPanel.loadPreset(selectedPreset)
             optionsPanel.updateVisibility()
+        }
+        if (e?.source == optionsPanel.waveTypeSelector) {
+            val sWavesEnabled = optionsPanel.waveTypeSelector.isSelected
+            // Handle the wave type change in simPanel
+            simPanel.updateWaveType(sWavesEnabled)
         }
     }
 
@@ -48,19 +54,31 @@ class AppPanel : JPanel(), ChangeListener, ActionListener {
             // Handle velocity slider changes
             optionsPanel.updateVelLabel(slider)
             val keys = optionsPanel.velSlidersToLabels.keys.toList()
-            val initialVels = listOf(
+            val pInitialVels = listOf(
                 keys[0].value.toFloat() / 10f,
                 keys[4].value.toFloat() / 10f,
                 keys[8].value.toFloat() / 10f,
                 keys[12].value.toFloat() / 10f
             )
-            val finalVels = listOf(
+            val pFinalVels = listOf(
                 keys[1].value.toFloat() / 10f,
                 keys[5].value.toFloat() / 10f,
                 keys[9].value.toFloat() / 10f,
                 keys[13].value.toFloat() / 10f
             )
-            simPanel.updateVelocities(initialVels, finalVels)
+            val sInitialVels = listOf(
+                keys[2].value.toFloat() / 10f,
+                keys[6].value.toFloat() / 10f,
+                keys[10].value.toFloat() / 10f,
+                keys[14].value.toFloat() / 10f
+            )
+            val sFinalVels = listOf(
+                keys[3].value.toFloat() / 10f,
+                keys[7].value.toFloat() / 10f,
+                keys[11].value.toFloat() / 10f,
+                keys[15].value.toFloat() / 10f
+            )
+            simPanel.updateVelocities(pInitialVels, pFinalVels, sInitialVels, sFinalVels)
         }
     }
 }
