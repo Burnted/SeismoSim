@@ -4,7 +4,6 @@ import kotlin.math.sqrt
 
 object Intersections {
 
-    // Assumes ray.direction is normalized -> a == 1.0 (saves a multiply)
     fun rayCircleIntersection(ray: Ray, circle: Circle): Intersection? {
         val oX = ray.origin.x
         val oY = ray.origin.y
@@ -18,7 +17,6 @@ object Intersections {
         val fX = oX - cX
         val fY = oY - cY
 
-        // a = d.dot(d) -> 1 if normalized
         val b = 2.0 * (fX * dX + fY * dY)
         val cTerm = fX * fX + fY * fY - r * r
 
@@ -35,16 +33,14 @@ object Intersections {
             else -> return null
         }
 
-        // compute hit point scalarly and create Vec2 only once
         val hitX = oX + dX * t
         val hitY = oY + dY * t
         val hit = Vec2(hitX, hitY)
 
-        // compute normal (single allocation)
         val nx = hitX - cX
         val ny = hitY - cY
         val nLen = sqrt(nx * nx + ny * ny)
-        val normal = if (nLen != 0.0) Vec2(nx / nLen, ny / nLen) else Vec2(0.0, 0.0)
+        val normal = Vec2(nx / nLen, ny / nLen)
 
         return Intersection(hit, normal, t, circle)
     }

@@ -8,19 +8,16 @@ import kotlin.math.sqrt
 class RayTracer(circles: List<Circle>, private val maxDepth: Int = 5) {
     private val circlesSorted: List<Circle> = circles.sortedByDescending { it.radius.toDouble() }
     private val radii: DoubleArray = circlesSorted.map { it.radius.toDouble() }.toDoubleArray()
-    private val circleIndexMap: Map<Circle, Int> = circlesSorted.withIndex().associate { it.value to it.index }
+    private val circleIndexArray: IntArray = IntArray(circlesSorted.size) { it }
 
     private val pAmbientVel = circlesSorted.first().pWaveVelocity
     private val sAmbientVel = circlesSorted.first().sWaveVelocity
 
-    // Pre-cached velocity arrays for faster layer lookups
     private val pVelocities = FloatArray(circlesSorted.size) { i -> circlesSorted[i].pWaveVelocity }
     private val sVelocities = FloatArray(circlesSorted.size) { i -> circlesSorted[i].sWaveVelocity }
 
-    // Reusable temp vectors to minimize allocations
     private val tempNormal = Vec2(0.0, 0.0)
     private val tinyOriginTemp = Vec2(0.0, 0.0)
-    private val distTemp = Vec2(0.0, 0.0)
 
     fun trace(initial: Ray, out: MutableList<Ray>) {
         val currentRay = Ray(Vec2(initial.origin.x, initial.origin.y), Vec2(initial.direction.x, initial.direction.y), Vec2(0.0, 0.0), initial.waveType)
@@ -39,7 +36,14 @@ class RayTracer(circles: List<Circle>, private val maxDepth: Int = 5) {
             circle.normalAt(hit.point, tempNormal)
             val entering = currentRay.direction.dot(tempNormal) < 0.0
 
-            val circleIdx = circleIndexMap[circle] ?: -1
+            // Binary search for circle index (faster than map lookup for sorted array)
+            var circleIdx = -1
+            for (i in circlesSorted.indices) {
+                if (circlesSorted[i] === circle) {
+                    circleIdx = i
+                    break
+                }
+            }
 
             val v1: Float
             val v2: Float

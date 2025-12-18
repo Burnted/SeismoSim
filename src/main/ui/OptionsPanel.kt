@@ -41,9 +41,9 @@ class OptionsPanel : JPanel() {
         alignmentX = LEFT_ALIGNMENT
     }
 
-    val layerLabels = listOf(JLabel("Layer 0:"), JLabel("Layer 1:"), JLabel("Layer 2:"), JLabel("Layer 3:"))
+    val layerLabels = arrayOf(JLabel("Layer 0:"), JLabel("Layer 1:"), JLabel("Layer 2:"), JLabel("Layer 3:"))
 
-    private val velSliders = arrayOf(
+    val velSliders = arrayOf(
         JSlider(JSlider.HORIZONTAL, 0, 150, 120),
         JSlider(JSlider.HORIZONTAL, 0, 150, 120),
         JSlider(JSlider.HORIZONTAL, 0, 100, 60),
@@ -80,10 +80,6 @@ class OptionsPanel : JPanel() {
         JLabel("S-Wave v_i:"),
         JLabel("S-Wave v_f:")
     )
-
-    // Expose sliders via property for easier iteration
-    val velSlidersToLabels: Map<JSlider, JLabel>
-        get() = velSliders.zip(velLabels).toMap()
 
     init {
         preferredSize = Dimension(300, 1000)
@@ -130,7 +126,7 @@ class OptionsPanel : JPanel() {
         var layer = 0
         for (i in velSliders.indices) {
             c.ipadx = 0
-            if (row in listOf(4, 9, 14, 19)) {
+            if (row in intArrayOf(4, 9, 14, 19)) {
                 layerLabels[layer].font = layerLabels[layer].font.deriveFont(16f)
                 c.gridx = 0
                 c.gridy = row
@@ -174,7 +170,8 @@ class OptionsPanel : JPanel() {
         if (idx < 0) return
         val label = velLabels[idx]
         val value: Float = slider.value / 10f
-        val text = label.text.split(":")[0]
+        val colonIdx = label.text.indexOf(':')
+        val text = if (colonIdx > 0) label.text.substring(0, colonIdx) else label.text
         label.text = "$text: $value km/s"
     }
 }

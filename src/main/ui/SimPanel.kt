@@ -30,16 +30,15 @@ class SimPanel : JPanel() {
     private var waveType = 0
 
     var initialRayOrigin = Vec2(400.0, 400.0)
-    private var rayDirs = mutableListOf<Vec2>()
+    private var rayDirs = arrayOf<Vec2>()
 
     private lateinit var circleLayer: BufferedImage
     private var raysLayer: BufferedImage? = null
     private val raysBuffer = mutableListOf<Ray>()
 
-    // Cache for ray rendering to avoid per-frame recomputation
     private var cachedRayOrigin = Vec2(-1e6, -1e6)
     private var cachedWaveType = -1
-    private var cachedRayDirsHash = 0
+    private var cachedRayDirCount = 0
     private var needsRayUpdate = true
 
     init {
@@ -96,12 +95,11 @@ class SimPanel : JPanel() {
             rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             rg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED)
 
-            // Only recompute rays if origin, direction count, or wave type changed
             if (needsRayUpdate ||
                 cachedRayOrigin.x != initialRayOrigin.x ||
                 cachedRayOrigin.y != initialRayOrigin.y ||
                 cachedWaveType != waveType ||
-                cachedRayDirsHash != rayDirs.hashCode()) {
+                cachedRayDirCount != rayDirs.size) {
 
                 raysBuffer.clear()
                 for (dir in rayDirs) {
@@ -112,7 +110,7 @@ class SimPanel : JPanel() {
                 cachedRayOrigin.x = initialRayOrigin.x
                 cachedRayOrigin.y = initialRayOrigin.y
                 cachedWaveType = waveType
-                cachedRayDirsHash = rayDirs.hashCode()
+                cachedRayDirCount = rayDirs.size
                 needsRayUpdate = false
             }
 
@@ -136,18 +134,16 @@ class SimPanel : JPanel() {
     }
 
     fun updateRayCount(rayCount: Int) {
-        rayDirs.clear()
-        val step = 1.0 / rayCount
-        for (i in 0..<rayCount) {
-            val y = -0.5 + i * step
-            rayDirs.add(Vec2(-1.0, y))
+        rayDirs = Array(rayCount) { i ->
+            val y = -0.5 + (i / rayCount.toDouble())
+            Vec2(-1.0, y)
         }
         needsRayUpdate = true
         repaint()
     }
 
-    fun updateVelocities(pIV: List<Float>, pFV: List<Float>, sIV: List<Float>, sFV: List<Float>) {
-        circles = Presets.createSimple(pIV, pFV, sIV, sFV).first
+    fun updateVelocities(pIV: FloatArray, pFV: FloatArray, sIV: FloatArray, sFV: FloatArray) {
+        circles = Presets.createSimple(pIV.toList(), pFV.toList(), sIV.toList(), sFV.toList()).first
         tracer = RayTracer(circles, maxDepth = preset.second.toInt() * 2)
         needsRayUpdate = true
         repaint()
