@@ -40,12 +40,16 @@ class PresetReader(var fileName: String) {
             val comma2Idx = line.indexOf(',', commaIdx + 1)
             if (comma2Idx < 0) continue
 
+            val comma3Idx = line.indexOf(',', comma2Idx + 1)
+            if (comma3Idx < 0) continue
+
             try {
                 val layerNum = line.substring(0, commaIdx).trim().toInt()
-                val waveVelocity = line.substring(commaIdx + 1, comma2Idx).trim().toFloat()
-                val radius = line.substring(comma2Idx + 1).trim().toFloat()
+                val pWaveVelocity = line.substring(commaIdx + 1, comma2Idx).trim().toFloat()
+                val sWaveVelocity = line.substring(comma2Idx + 1, comma3Idx).trim().toFloat()
+                val radius = line.substring(comma3Idx + 1).trim().toFloat()
 
-                val circle = Circle(sharedCenter, radius, waveVelocity, 0f, layerNum)
+                val circle = Circle(sharedCenter, radius, pWaveVelocity, sWaveVelocity, layerNum)
                 circles.add(circle)
                 if (radius > maxRadius) maxRadius = radius
             } catch (e: Exception) {

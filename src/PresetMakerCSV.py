@@ -19,15 +19,20 @@ with open(output_file_path, "w") as preset_file:
 
     dr = 0
     for medium in range(medium_count):
-        v_i = float(items["P-Wave V"].values[medium].split(" to ")[0])
-        v_f = float(items["P-Wave V"].values[medium].split(" to ")[1])
+        pv_i = float(items["P-Wave V"].values[medium].split(" to ")[0])
+        pv_f = float(items["P-Wave V"].values[medium].split(" to ")[1])
+        sv_i = float(items["S-Wave V"].values[medium].split(" to ")[0])
+        sv_f = float(items["S-Wave V"].values[medium].split(" to ")[1])
+
         r_i = planet_radius if medium == 0 else planet_radius - dr
         layer_height = int(items["Depth"].values[medium].split(" to ")[1]) - int(items["Depth"].values[medium].split(" to ")[0])
         dr += layer_height
-        dv = (v_f - v_i) / layer_height
+        p_dv = (pv_f - pv_i) / layer_height
+        s_dv = (sv_f - sv_i) / layer_height
         for layer in range(layer_height):
-            v = v_i + dv * layer
+            p_v = pv_i + p_dv * layer
+            s_v = sv_i + s_dv * layer
             r = r_i - layer
-            preset_file.write(f"{medium},{v},{int(r)}\n")
+            preset_file.write(f"{medium},{p_v},{s_v},{int(r)}\n")
 
 
