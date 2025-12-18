@@ -27,7 +27,7 @@ class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, priva
         }
 
         var currentLayer = layerForPoint(currentRay.origin)
-        var currentMediumVelo = if (currentLayer >= 0) circlesSorted[currentLayer].waveVelocity else ambientVelocity
+        var currentMediumVelo = if (currentLayer >= 0) circlesSorted[currentLayer].pWaveVelocity else ambientVelocity
 
         // temporary vector for nudged origin
         val tinyOriginTemp = Vec2(0.0, 0.0)
@@ -53,10 +53,10 @@ class RayTracer(circles: List<Circle>, private var ambientVelocity: Float, priva
             val v2: Float
             if (entering) {
                 v1 = currentMediumVelo
-                v2 = circle.waveVelocity
+                v2 = circle.pWaveVelocity
             } else {
                 v1 = currentMediumVelo
-                v2 = if (circleIdx - 1 >= 0) circlesSorted[circleIdx - 1].waveVelocity else ambientVelocity
+                v2 = if (circleIdx - 1 >= 0) circlesSorted[circleIdx - 1].pWaveVelocity else ambientVelocity
             }
 
             val refractedDir = vecRefract(currentRay.direction, if (entering) normal else normal * -1.0, v1, v2)

@@ -4,6 +4,7 @@ import main.geometry.Circle
 import main.geometry.Ray
 import main.geometry.Vec2
 import main.presets.PresetReader
+import main.presets.Presets
 import main.render.Renderer
 import main.sim.RayTracer
 import java.awt.*
@@ -24,7 +25,7 @@ class SimPanel : JPanel() {
 
     private var preset: Pair<MutableList<Circle>, Float> = presetReader.readContentIntoCircles()
     private var circles = preset.first
-    private var tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = 100000)
+    private var tracer: RayTracer = RayTracer(circles, ambientVelocity = 5.3f, maxDepth = preset.second.toInt() * 2)
     private var drawScale = STANDARD_RADIUS / preset.second
 
     var initialRayOrigin = Vec2(400.0, 400.0)
@@ -137,7 +138,7 @@ class SimPanel : JPanel() {
         presetReader.fileName = if (selectedPreset == "custom") "simple.txt" else "$selectedPreset.txt"
         preset = presetReader.readContentIntoCircles()
         circles = preset.first
-        tracer = RayTracer(circles, ambientVelocity = circles.first().waveVelocity, maxDepth = 100000)
+        tracer = RayTracer(circles, ambientVelocity = circles.first().pWaveVelocity, maxDepth = preset.second.toInt() * 2)
         drawScale = STANDARD_RADIUS / preset.second
         initCircleLayer()
         repaint()
@@ -152,6 +153,21 @@ class SimPanel : JPanel() {
             rayDirs.add(Vec2(-1.0, y))
         }
         repaint()
+    }
 
+    fun updateVelocities(initialVelocities: List<Float>, finalVelocities: List<Float>) {
+        circles = Presets.createSimple(
+            vI0 = initialVelocities[0],
+            vF0 = finalVelocities[0],
+            vI1 = initialVelocities[1],
+            vF1 = finalVelocities[1],
+            vI2 = initialVelocities[2],
+            vF2 = finalVelocities[2],
+            vI3 = initialVelocities[3],
+            vF3 = finalVelocities[3]
+        ).first
+
+        tracer = RayTracer(circles, ambientVelocity = circles.first().pWaveVelocity, maxDepth = preset.second.toInt() * 2)
+        repaint()
     }
 }
