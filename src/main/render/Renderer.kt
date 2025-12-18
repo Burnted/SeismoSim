@@ -6,12 +6,14 @@ import main.geometry.Vec2
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
+import java.awt.geom.Path2D
 import kotlin.math.roundToInt
 
 object Renderer {
     private val cachedStroke = mutableMapOf<Float, BasicStroke>()
+    private val rayPath = Path2D.Double()
 
-    private fun getStroke(width: Float): BasicStroke {
+    inline fun getStroke(width: Float): BasicStroke {
         return cachedStroke.getOrPut(width) { BasicStroke(width) }
     }
 
@@ -25,18 +27,23 @@ object Renderer {
         g.drawOval(cx - r, cy - r, r * 2, r * 2)
     }
 
-    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Float, color: Color, strokeWidth: Float = 2f) {
+    fun drawRays(g: Graphics2D, rays: List<Ray>, screenCenter: Vec2, scale: Float, color: Color, strokeWidth: Float = 1.2f) {
         if (rays.isEmpty()) return
+
+        rayPath.reset()
+
+        for (ray in rays) {
+            val ox = ray.origin.x * scale + screenCenter.x
+            val oy = -ray.origin.y * scale + screenCenter.y
+            val ex = ray.end.x * scale + screenCenter.x
+            val ey = -ray.end.y * scale + screenCenter.y
+
+            rayPath.moveTo(ox, oy)
+            rayPath.lineTo(ex, ey)
+        }
 
         g.stroke = getStroke(strokeWidth)
         g.color = color
-
-        for (ray in rays) {
-            val ox = (ray.origin.x * scale + screenCenter.x).toInt()
-            val oy = (-ray.origin.y * scale + screenCenter.y).toInt()
-            val ex = (ray.end.x * scale + screenCenter.x).toInt()
-            val ey = (-ray.end.y * scale + screenCenter.y).toInt()
-            g.drawLine(ox, oy, ex, ey)
-        }
+        g.draw(rayPath)
     }
 }

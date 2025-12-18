@@ -1,7 +1,6 @@
 package main.geometry
 
 data class Ray(var origin: Vec2, var direction: Vec2, var end: Vec2 = Vec2(0.0, 0.0), val waveType: Int) {
-    // Constructor overload for direct values (avoids Vec2 allocations)
     constructor(ox: Double, oy: Double, dx: Double, dy: Double, wt: Int) : this(
         Vec2(ox, oy),
         Vec2(dx, dy).also { it.normalizeInPlace() },
@@ -29,8 +28,5 @@ data class Ray(var origin: Vec2, var direction: Vec2, var end: Vec2 = Vec2(0.0, 
         direction.normalizeInPlace()
         setEndDistance(dist)
     }
-
-    fun copyForRecord(): Ray {
-        return Ray(Vec2(origin.x, origin.y), Vec2(direction.x, direction.y), Vec2(end.x, end.y), waveType)
-    }
 }
+

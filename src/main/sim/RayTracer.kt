@@ -6,18 +6,22 @@ import main.sim.Snell.vecRefract
 import kotlin.math.sqrt
 
 class RayTracer(circles: List<Circle>, private val maxDepth: Int = 5) {
-    private val circlesSorted: List<Circle> = circles.sortedByDescending { it.radius.toDouble() }
+    private val circlesSorted: Array<Circle> = circles.sortedByDescending { it.radius.toDouble() }.toTypedArray()
     private val radii: DoubleArray = circlesSorted.map { it.radius.toDouble() }.toDoubleArray()
-    private val circleIndexArray: IntArray = IntArray(circlesSorted.size) { it }
+    private val pVelocities: FloatArray = FloatArray(circlesSorted.size) { i -> circlesSorted[i].pWaveVelocity }
+    private val sVelocities: FloatArray = FloatArray(circlesSorted.size) { i -> circlesSorted[i].sWaveVelocity }
+    private val circlesCount: Int = circlesSorted.size
 
-    private val pAmbientVel = circlesSorted.first().pWaveVelocity
-    private val sAmbientVel = circlesSorted.first().sWaveVelocity
+    private val pAmbientVel: Float = circlesSorted.first().pWaveVelocity
+    private val sAmbientVel: Float = circlesSorted.first().sWaveVelocity
+    private val maxRadius: Double = radii[0]
 
-    private val pVelocities = FloatArray(circlesSorted.size) { i -> circlesSorted[i].pWaveVelocity }
-    private val sVelocities = FloatArray(circlesSorted.size) { i -> circlesSorted[i].sWaveVelocity }
-
+    // Pre-allocated temp vectors
     private val tempNormal = Vec2(0.0, 0.0)
     private val tinyOriginTemp = Vec2(0.0, 0.0)
+    private val tempHitPoint = Vec2(0.0, 0.0)
+    private val tempNegNormal = Vec2(0.0, 0.0)
+    private val tempDir = Vec2(0.0, 0.0)
 
     fun trace(initial: Ray, out: MutableList<Ray>) {
         val currentRay = Ray(Vec2(initial.origin.x, initial.origin.y), Vec2(initial.direction.x, initial.direction.y), Vec2(0.0, 0.0), initial.waveType)
@@ -26,25 +30,80 @@ class RayTracer(circles: List<Circle>, private val maxDepth: Int = 5) {
 
         var currentLayer = layerForPoint(currentRay.origin)
         var currentMediumVelo = getVelocity(currentLayer, currentRay.waveType)
+        var bestT = Double.MAX_VALUE
+        var bestCircleIdx = -1
 
         for (depth in 0..<maxDepth) {
-            val hit = findClosestIntersectionLimited(currentRay, currentLayer) ?: break
+            bestT = Double.MAX_VALUE
+            bestCircleIdx = -1
 
-            out.add(currentRay.copyForRecord().also { it.end.x = hit.point.x; it.end.y = hit.point.y })
+            val oX = currentRay.origin.x
+            val oY = currentRay.origin.y
+            val dX = currentRay.direction.x
+            val dY = currentRay.direction.y
 
-            val circle = hit.circle
-            circle.normalAt(hit.point, tempNormal)
-            val entering = currentRay.direction.dot(tempNormal) < 0.0
+            // Search in local range only
+            val low: Int
+            val high: Int
+            if (currentLayer in 0..<circlesCount) {
+                low = (currentLayer - 1).coerceAtLeast(0)
+                high = (currentLayer + 1).coerceAtMost(circlesCount - 1)
+            } else {
+                low = 0
+                high = if (circlesCount > 1) 1 else 0
+            }
 
-            // Binary search for circle index (faster than map lookup for sorted array)
-            var circleIdx = -1
-            for (i in circlesSorted.indices) {
-                if (circlesSorted[i] === circle) {
-                    circleIdx = i
-                    break
+            // Inline ray-circle intersection test
+            for (i in high downTo low) {
+                val circle = circlesSorted[i]
+                val cX = circle.center.x
+                val cY = circle.center.y
+                val r = circle.radius.toDouble()
+
+                val fX = oX - cX
+                val fY = oY - cY
+
+                val b = 2.0 * (fX * dX + fY * dY)
+                val cTerm = fX * fX + fY * fY - r * r
+
+                val discriminant = b * b - 4.0 * cTerm
+                if (discriminant < 0.0) continue
+
+                val sqrtD = sqrt(discriminant)
+                val t1 = (-b - sqrtD) * 0.5
+                val t2 = (-b + sqrtD) * 0.5
+
+                val t = if (t1 >= 1e-12) t1 else if (t2 >= 1e-12) t2 else continue
+
+                if (t < bestT) {
+                    bestT = t
+                    bestCircleIdx = i
                 }
             }
 
+            if (bestCircleIdx < 0) break
+
+            val circle = circlesSorted[bestCircleIdx]
+            tempHitPoint.x = oX + dX * bestT
+            tempHitPoint.y = oY + dY * bestT
+
+            // Record ray
+            out.add(Ray(
+                Vec2(oX, oY),
+                Vec2(dX, dY),
+                Vec2(tempHitPoint.x, tempHitPoint.y),
+                currentRay.waveType
+            ))
+
+            // Calculate normal (inline)
+            val nx = tempHitPoint.x - circle.center.x
+            val ny = tempHitPoint.y - circle.center.y
+            val nLen = sqrt(nx * nx + ny * ny)
+            tempNormal.set(nx / nLen, ny / nLen)
+
+            val entering = currentRay.direction.dot(tempNormal) < 0.0
+
+            // Get velocities
             val v1: Float
             val v2: Float
             if (entering) {
@@ -52,65 +111,51 @@ class RayTracer(circles: List<Circle>, private val maxDepth: Int = 5) {
                 v2 = if (currentRay.waveType == 0) circle.pWaveVelocity else circle.sWaveVelocity
             } else {
                 v1 = currentMediumVelo
-                v2 = if (circleIdx - 1 >= 0) {
-                    if (currentRay.waveType == 0) pVelocities[circleIdx - 1]
-                    else sVelocities[circleIdx - 1]
+                v2 = if (bestCircleIdx > 0) {
+                    if (currentRay.waveType == 0) pVelocities[bestCircleIdx - 1] else sVelocities[bestCircleIdx - 1]
                 } else {
                     if (currentRay.waveType == 0) pAmbientVel else sAmbientVel
                 }
             }
 
-            val normalDir = if (entering) tempNormal else tempNormal * -1.0
-            val refractedDir = vecRefract(currentRay.direction, normalDir, v1, v2)
-            val newDir = if (refractedDir != null) {
-                currentMediumVelo = v2
-                refractedDir
+            // Refract or reflect
+            if (entering) {
+                val refracted = vecRefract(currentRay.direction, tempNormal, v1, v2)
+                if (refracted != null) {
+                    currentMediumVelo = v2
+                    tempDir.set(refracted.x, refracted.y)
+                } else {
+                    reflect(currentRay.direction, tempNormal, tempDir)
+                }
             } else {
-                reflect(currentRay.direction, normalDir)
+                tempNegNormal.set(-tempNormal.x, -tempNormal.y)
+                val refracted = vecRefract(currentRay.direction, tempNegNormal, v1, v2)
+                if (refracted != null) {
+                    currentMediumVelo = v2
+                    tempDir.set(refracted.x, refracted.y)
+                } else {
+                    reflect(currentRay.direction, tempNegNormal, tempDir)
+                }
             }
 
-            val newDirNorm = newDir.normalizedCopy()
-            tinyOriginTemp.x = hit.point.x + newDirNorm.x * 1e-4
-            tinyOriginTemp.y = hit.point.y + newDirNorm.y * 1e-4
+            val newDirNorm = tempDir.normalizedCopy()
+            tinyOriginTemp.set(tempHitPoint.x + newDirNorm.x * 1e-4, tempHitPoint.y + newDirNorm.y * 1e-4)
 
-            currentRay.reset(tinyOriginTemp, newDir, 1_000_000.0)
+            currentRay.reset(tinyOriginTemp, tempDir, 1_000_000.0)
             currentLayer = layerForPoint(currentRay.origin)
         }
     }
 
-    private fun layerForPoint(p: Vec2): Int {
+    private inline fun layerForPoint(p: Vec2): Int {
         val d = sqrt(p.x * p.x + p.y * p.y)
-        return (radii[0] - d).toInt()
+        return (maxRadius - d).toInt()
     }
 
-    private fun getVelocity(layer: Int, waveType: Int): Float {
-        return if (layer >= 0 && layer < circlesSorted.size) {
+    private inline fun getVelocity(layer: Int, waveType: Int): Float {
+        return if (layer in 0..<circlesCount) {
             if (waveType == 0) pVelocities[layer] else sVelocities[layer]
         } else {
             if (waveType == 0) pAmbientVel else sAmbientVel
         }
-    }
-
-    private fun findClosestIntersectionLimited(ray: Ray, currentLayer: Int): Intersection? {
-        val circles = circlesSorted
-        val n = circles.size
-
-        val low: Int
-        val high: Int
-        if (currentLayer >= 0) {
-            low = (currentLayer - 1).coerceAtLeast(0)
-            high = (currentLayer + 1).coerceAtMost(n - 1)
-        } else {
-            low = 0
-            high = if (n > 1) 1 else 0
-        }
-
-        for (i in high downTo low) {
-            val intr = Intersections.rayCircleIntersection(ray, circles[i])
-            if (intr != null) {
-                return intr
-            }
-        }
-        return null
     }
 }

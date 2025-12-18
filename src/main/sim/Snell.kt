@@ -39,6 +39,28 @@ object Snell {
         return tempRefr
     }
 
+    fun reflect(incident: Vec2, normal: Vec2, out: Vec2) {
+        val iX = incident.x
+        val iY = incident.y
+        val iLen = sqrt(iX * iX + iY * iY)
+        val iNormX = iX / iLen
+        val iNormY = iY / iLen
+
+        val nX = normal.x
+        val nY = normal.y
+        val nLen = sqrt(nX * nX + nY * nY)
+        val nNormX = nX / nLen
+        val nNormY = nY / nLen
+
+        val dotProd = 2.0 * (iNormX * nNormX + iNormY * nNormY)
+        val reflectX = iNormX - nNormX * dotProd
+        val reflectY = iNormY - nNormY * dotProd
+
+        val rLen = sqrt(reflectX * reflectX + reflectY * reflectY)
+        out.x = reflectX / rLen
+        out.y = reflectY / rLen
+    }
+
     fun reflect(incident: Vec2, normal: Vec2): Vec2 {
         val iX = incident.x
         val iY = incident.y

@@ -166,12 +166,15 @@ class OptionsPanel : JPanel() {
     }
 
     fun updateVelLabel(slider: JSlider) {
-        val idx = velSliders.indexOf(slider)
-        if (idx < 0) return
-        val label = velLabels[idx]
-        val value: Float = slider.value / 10f
-        val colonIdx = label.text.indexOf(':')
-        val text = if (colonIdx > 0) label.text.substring(0, colonIdx) else label.text
-        label.text = "$text: $value km/s"
+        for (i in velSliders.indices) {
+            if (velSliders[i] === slider) {
+                val label = velLabels[i]
+                val value: Float = slider.value / 10f
+                val colonIdx = label.text.indexOf(':')
+                val text = if (colonIdx > 0) label.text.substring(0, colonIdx) else label.text
+                label.text = "$text: $value km/s"
+                return
+            }
+        }
     }
 }

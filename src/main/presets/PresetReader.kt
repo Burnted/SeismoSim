@@ -31,7 +31,8 @@ class PresetReader(var fileName: String) {
         val sharedCenter = Vec2(0.0, 0.0)
 
         for (line in lines) {
-            if (line.isEmpty() || line[0] == '#') continue
+            val firstChar = line.firstOrNull() ?: continue
+            if (firstChar == '#' || firstChar == ' ') continue
 
             val commaIdx = line.indexOf(',')
             if (commaIdx < 0) continue
@@ -48,7 +49,7 @@ class PresetReader(var fileName: String) {
                 circles.add(circle)
                 if (radius > maxRadius) maxRadius = radius
             } catch (e: Exception) {
-                println("Invalid data in line: $line")
+                // Skip malformed lines
             }
         }
 

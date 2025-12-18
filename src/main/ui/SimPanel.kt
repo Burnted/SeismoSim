@@ -50,10 +50,12 @@ class SimPanel : JPanel() {
             override fun mouseMoved(e: MouseEvent) {
                 val x = (e.x.toDouble() - center.x) / drawScale
                 val y = -(e.y.toDouble() - center.y) / drawScale
-                initialRayOrigin.x = x
-                initialRayOrigin.y = y
-                needsRayUpdate = true
-                repaint()
+                if (initialRayOrigin.x != x || initialRayOrigin.y != y) {
+                    initialRayOrigin.x = x
+                    initialRayOrigin.y = y
+                    needsRayUpdate = true
+                    repaint()
+                }
             }
         })
     }
@@ -63,6 +65,7 @@ class SimPanel : JPanel() {
         val g2d = circleLayer.createGraphics()
         try {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
             for (circle in circles) {
                 val color = if (circle.mediumType % 2 == 0) {
                     Color(200, 200, 255)
@@ -83,16 +86,15 @@ class SimPanel : JPanel() {
         g2d.drawImage(circleLayer, 0, 0, null)
 
         if (raysLayer == null || raysLayer!!.width != WIDTH || raysLayer!!.height != HEIGHT) {
-            raysLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB)
+            raysLayer = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB)
         }
 
         val buf = raysLayer!!
         val rg = buf.createGraphics()
         try {
-            rg.composite = AlphaComposite.Clear
+            rg.color = Color.BLACK
             rg.fillRect(0, 0, WIDTH, HEIGHT)
-            rg.composite = AlphaComposite.SrcOver
-            rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF)
             rg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED)
 
             if (needsRayUpdate ||
@@ -114,7 +116,7 @@ class SimPanel : JPanel() {
                 needsRayUpdate = false
             }
 
-            Renderer.drawRays(rg, raysBuffer, center, drawScale, Color.RED, 1.2f)
+            Renderer.drawRays(rg, raysBuffer, center, drawScale, Color.RED, 1.0f)
         } finally {
             rg.dispose()
         }
